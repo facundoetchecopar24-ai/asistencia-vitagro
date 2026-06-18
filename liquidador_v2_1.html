@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Asistencia — ProSoft PC4</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f4;color:#1c1c1b;line-height:1.5}
+:root{--green:#2d6a4f;--green-bg:#d8f3dc;--blue:#1d4e89;--blue-bg:#dbeafe;--red:#991b1b;--red-bg:#fee2e2;--orange:#92400e;--orange-bg:#fef3c7;--purple:#5b21b6;--purple-bg:#ede9fe;--gray:#374151;--gray-bg:#f3f4f6;--border:#e5e7eb;--card:#fff}
+.topbar{background:#1c1c1b;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:12px}
+.topbar h1{font-size:16px;font-weight:600;letter-spacing:-.3px}
+.topbar span{font-size:12px;color:#9ca3af;margin-left:auto}
+.main{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 44px)}
+.sidebar{background:#fff;border-right:1px solid var(--border);padding:16px;overflow-y:auto;max-height:calc(100vh - 44px);position:sticky;top:0}
+.content{padding:20px;overflow-y:auto}
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:#6b7280;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.section-title:first-child{margin-top:0}
+label{display:block;font-size:12px;color:#6b7280;margin-bottom:3px;margin-top:8px}
+input[type=text],input[type=number],select,textarea{width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;background:#fff;color:#1c1c1b;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#6b7280}
+textarea{resize:vertical;font-family:monospace;font-size:11px;min-height:110px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s;white-space:nowrap}
+.btn:hover{background:#f9fafb}
+.btn-primary{background:#1c1c1b;color:#fff;border-color:#1c1c1b}
+.btn-primary:hover{background:#374151}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-green:hover{background:#1e4d38}
+.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-blue:hover{background:#163870}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:#fca5a5}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-planta{background:var(--green-bg);color:var(--green)}
+.badge-comercial{background:var(--blue-bg);color:var(--blue)}
+.badge-sin{background:var(--gray-bg);color:var(--gray)}
+.badge-manana{background:#dcfce7;color:#166534}
+.badge-tarde{background:#fed7aa;color:#9a3412}
+.badge-noche{background:var(--purple-bg);color:var(--purple)}
+.badge-diurno{background:var(--gray-bg);color:#4b5563}
+.badge-doble{background:var(--red-bg);color:var(--red)}
+.badge-sabado{background:#ffedd5;color:#9a3412}
+.badge-normal{background:var(--gray-bg);color:#4b5563}
+.badge-ok{background:#dcfce7;color:#166534}
+.badge-excede{background:var(--orange-bg);color:var(--orange)}
+.badge-sinregreso{background:var(--red-bg);color:var(--red)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metric-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.metric-card .mlabel{font-size:11px;color:#6b7280;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.metric-card .mvalue{font-size:22px;font-weight:600;margin-top:4px;letter-spacing:-.5px}
+.tabs{display:flex;gap:2px;background:#f3f4f6;border-radius:8px;padding:3px;margin-bottom:16px}
+.tab{padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:#6b7280;transition:all .15s;border:none;background:none}
+.tab.active{background:#fff;color:#1c1c1b;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f9fafb;padding:8px 10px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#6b7280;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid #f3f4f6;vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr.data-row:hover td{background:#f9fafb;cursor:pointer}
+.expand-row td{background:#f8f9ff;padding:0}
+.expand-inner{padding:12px 16px;border-top:1px solid #e0e7ff}
+.sub-table{width:100%;font-size:11px;border-collapse:collapse}
+.sub-table th{background:#eff0f8;padding:5px 10px;font-size:10px;font-weight:600;color:#4b5563;border-bottom:1px solid #e0e7ff}
+.sub-table td{padding:5px 10px;border-bottom:1px solid #f0f0f8;color:#374151}
+.sub-table tr:last-child td{border-bottom:none}
+.avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.av-c{background:#bbf7d0;color:#166534}.av-b{background:#bfdbfe;color:#1e40af}
+.av-g{background:#ddd6fe;color:#5b21b6}.av-j{background:#fed7aa;color:#9a3412}
+.av-je{background:#fce7f3;color:#9d174d}.av-m{background:#e0e7ff;color:#3730a3}
+.av-x{background:#f3f4f6;color:#6b7280}
+.name-cell{display:flex;align-items:center;gap:8px}
+.filters{display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+.filters select{width:160px}
+.filters label{margin:0;color:#6b7280;font-size:12px;white-space:nowrap}
+.total-row td{font-weight:600;background:#f9fafb;border-top:2px solid var(--border)}
+.alert{padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px}
+.alert-warn{background:var(--orange-bg);color:var(--orange);border:1px solid #fcd34d}
+.alert-info{background:var(--blue-bg);color:var(--blue);border:1px solid #93c5fd}
+.rotation-section{display:none}
+.rotation-section.visible{display:block}
+.name-editor-item{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.name-editor-item input{flex:1}
+.chip{background:#f3f4f6;border-radius:4px;padding:2px 6px;font-family:monospace;font-size:11px;white-space:nowrap}
+.footer-note{font-size:11px;color:#9ca3af;margin-top:8px}
+.expand-icon{display:inline-block;transition:transform .2s;font-style:normal;font-size:10px;color:#9ca3af;margin-right:4px}
+.expanded .expand-icon{transform:rotate(90deg)}
+.hs-chip{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-right:2px}
+.hc-n{background:#f3f4f6;color:#374151}
+.hc-e{background:#ede9fe;color:#5b21b6}
+.hc-s{background:#ffedd5;color:#9a3412}
+.hc-d{background:#fee2e2;color:#991b1b}
+.hc-f{background:#fce7f3;color:#9d174d}
+.hc-nc{background:#1c1c1b;color:#fff}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:4px}
+.modal p{font-size:13px;color:#6b7280;margin-bottom:16px}
+.modal label{margin-top:12px}
+.modal-btns{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.sheets-status{font-size:12px;padding:6px 10px;border-radius:6px;margin-top:8px;display:none}
+.sheets-ok{background:#dcfce7;color:#166534}
+.sheets-err{background:var(--red-bg);color:var(--red)}
+.pdf-progress{display:none;margin-top:8px;font-size:12px;color:#6b7280}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <h1>Control de Asistencia &middot; ProSoft PC4</h1>
+  <span>v2.0 &mdash; Offline</span>
+</div>
+
+<div class="main">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="section-title">Configuracion general</div>
+  <label>Modo de temporada</label>
+  <select id="cfg_modo">
+    <option value="baja">Temporada baja (08:00-16:00)</option>
+    <option value="alta">Temporada alta (rotacion por sector)</option>
+  </select>
+  <label>Franquicia de descanso (min)</label>
+  <input type="number" id="cfg_franquicia" value="60" min="0">
+  <label>Horas base por turno</label>
+  <input type="number" id="cfg_horas_base" value="8" min="1" max="24">
+  <label>Tarifa diurna ($/h)</label>
+  <input type="number" id="cfg_tarifa_diurna" value="4500" min="0">
+  <label>Tarifa nocturna ($/h)</label>
+  <input type="number" id="cfg_tarifa_nocturna" value="5300" min="0">
+  <label>Recargo horas extra (%)</label>
+  <input type="number" id="cfg_extra_pct" value="12" min="0" max="200">
+  <label>Nombre empresa (para PDF)</label>
+  <input type="text" id="cfg_empresa" value="Mi Empresa S.A.">
+  <div class="section-title">Sectores (nombres separados por coma)</div>
+  <label>Planta</label>
+  <input type="text" id="cfg_planta" value="cristian,bruno,gonza,juani,jeremias">
+  <label>Comercial</label>
+  <input type="text" id="cfg_comercial" value="marcelo">
+
+  <div id="rotationSection" class="rotation-section">
+    <div class="section-title">Rotacion temporada alta</div>
+    <label>Fecha del lunes inicial</label>
+    <input type="text" id="cfg_lunes" value="2025-04-07" placeholder="YYYY-MM-DD">
+    <label>Semana 1 - Turno Planta</label>
+    <select id="cfg_s1"><option value="manana">Manana (06-14)</option><option value="tarde">Tarde (14-22)</option><option value="noche">Noche (22-06)</option></select>
+    <label>Semana 2 - Turno Planta</label>
+    <select id="cfg_s2"><option value="manana">Manana (06-14)</option><option value="tarde" selected>Tarde (14-22)</option><option value="noche">Noche (22-06)</option></select>
+    <label>Semana 3 - Turno Planta</label>
+    <select id="cfg_s3"><option value="manana">Manana (06-14)</option><option value="tarde">Tarde (14-22)</option><option value="noche" selected>Noche (22-06)</option></select>
+  </div>
+
+  <div class="section-title">Google Sheets</div>
+  <label>Client ID OAuth</label>
+  <input type="text" id="cfg_gclient" placeholder="xxxxxxx.apps.googleusercontent.com">
+  <label>ID de la planilla destino</label>
+  <input type="text" id="cfg_gsheet" placeholder="1BxiMVs0XRA...">
+  <button class="btn btn-sm" style="margin-top:8px" onclick="abrirModalSheets()">Configurar y conectar</button>
+  <div id="sheetsStatus" class="sheets-status"></div>
+
+  <div class="section-title">Log del reloj</div>
+  <label>Pegar contenido del archivo .TXT</label>
+  <textarea id="logInput" placeholder="Pega aqui el contenido exportado del pendrive..."></textarea>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="procesarLog()">Procesar</button>
+    <button class="btn" onclick="cargarEjemplo()">Ejemplo</button>
+    <button class="btn btn-danger btn-sm" onclick="limpiarTodo()">Limpiar</button>
+  </div>
+  <div class="footer-note">Abri el .TXT con el Bloc de notas, Ctrl+A y Ctrl+V aqui.</div>
+</aside>
+
+<!-- CONTENT -->
+<main class="content">
+  <div id="nameEditorSection" style="display:none">
+    <div class="alert alert-warn">Se encontraron empleados sin nombre. Completa los datos antes de continuar.</div>
+    <div id="nameEditorList"></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="confirmarNombres()">Confirmar y generar reporte</button></div>
+  </div>
+
+  <div id="reportSection" style="display:none">
+    <div class="metrics">
+      <div class="metric-card"><div class="mlabel">Empleados</div><div class="mvalue" id="met_emp">-</div></div>
+      <div class="metric-card"><div class="mlabel">Horas trabajadas</div><div class="mvalue" id="met_hs">-</div></div>
+      <div class="metric-card"><div class="mlabel">Horas extra</div><div class="mvalue" id="met_ex">-</div></div>
+      <div class="metric-card"><div class="mlabel">Total a liquidar</div><div class="mvalue" id="met_tot">-</div></div>
+    </div>
+
+    <div class="filters">
+      <label>Empleado:</label>
+      <select id="fil_emp" onchange="renderReportes()"><option value="">Todos</option></select>
+      <label>Sector:</label>
+      <select id="fil_sec" onchange="renderReportes()">
+        <option value="">Todos</option>
+        <option value="Planta">Planta</option>
+        <option value="Comercial">Comercial</option>
+        <option value="Sin sector">Sin sector</option>
+      </select>
+      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="exportarCSV()">Exportar CSV</button>
+        <button class="btn btn-green btn-sm" onclick="enviarSheets()">Enviar a Sheets</button>
+        <button class="btn btn-blue btn-sm" onclick="abrirModalPDF()">Generar PDF</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(0,this)">Detalle por jornada</button>
+      <button class="tab" onclick="switchTab(1,this)">Descansos</button>
+      <button class="tab" onclick="switchTab(2,this)">Resumen por empleado</button>
+    </div>
+
+    <div id="tab0">
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>Empleado</th><th>Sector</th><th>Fecha</th><th>Entrada</th><th>Salida</th>
+          <th>Turno</th><th>Desc total</th><th>Desc desc.</th><th>Hs trab.</th>
+          <th>Hs extra</th><th>Tipo dia</th><th>Total $</th>
+        </tr></thead><tbody id="body_detalle"></tbody></table>
+      </div>
+    </div>
+
+    <div id="tab1" style="display:none">
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>Empleado</th><th>Fecha</th><th>Salida desc.</th><th>Regreso</th><th>Duracion</th><th>Estado</th>
+        </tr></thead><tbody id="body_descansos"></tbody></table>
+      </div>
+    </div>
+
+    <div id="tab2" style="display:none">
+      <div class="table-wrap">
+        <table id="tbl_resumen"><thead><tr>
+          <th></th><th>Empleado</th><th>Sector</th><th>Dias</th>
+          <th>Hs norm. diurna</th><th>Hs norm. nocturna</th>
+          <th>Hs extra diurna</th><th>Hs extra nocturna</th>
+          <th>Hs sabado</th><th>Hs domingo</th><th>Hs feriado</th>
+          <th>Min desc. desc.</th><th>Total $</th>
+        </tr></thead><tbody id="body_resumen"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="emptyState" style="text-align:center;padding:60px 20px;color:#9ca3af">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin-bottom:12px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+    <p style="font-size:14px;font-weight:500;color:#6b7280">Sin datos procesados</p>
+    <p style="font-size:13px;margin-top:4px">Pega el log del reloj y hace clic en Procesar</p>
+  </div>
+</main>
+</div>
+
+<!-- MODAL SHEETS -->
+<div class="modal-overlay" id="modalSheets">
+  <div class="modal">
+    <h2>Conectar con Google Sheets</h2>
+    <p>Para la integracion necesitas un proyecto en Google Cloud con la Sheets API habilitada.</p>
+    <div style="background:#f8f9fa;border-radius:8px;padding:14px;font-size:12px;line-height:1.8;color:#374151;border:1px solid var(--border)">
+      <strong>Configuracion en Google Cloud (una sola vez):</strong><br>
+      1. Ir a <strong>console.cloud.google.com</strong> &rarr; nuevo proyecto<br>
+      2. APIs y servicios &rarr; Sheets API &rarr; Habilitar<br>
+      3. Credenciales &rarr; Crear &rarr; ID de cliente OAuth &rarr; Aplicacion web<br>
+      4. <strong>Origen JS autorizado:</strong> <code id="urlOrigen" style="background:#e5e7eb;padding:1px 5px;border-radius:3px;font-size:11px">abriendo...</code><br>
+      5. <strong>URI de redireccionamiento:</strong> <code id="urlRedirect" style="background:#e5e7eb;padding:1px 5px;border-radius:3px;font-size:11px">abriendo...</code><br>
+      6. Copiar el Client ID generado en el campo de abajo
+    </div>
+    <label style="margin-top:14px">Client ID OAuth</label>
+    <input type="text" id="m_gclient" placeholder="xxxxxxx.apps.googleusercontent.com">
+    <label>ID de la planilla (de la URL de Sheets)</label>
+    <input type="text" id="m_gsheet" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+    <label>Nombre de la hoja destino</label>
+    <input type="text" id="m_ghoja" value="Registros" placeholder="Registros">
+    <div class="modal-btns">
+      <button class="btn" onclick="cerrarModal('modalSheets')">Cancelar</button>
+      <button class="btn btn-green" onclick="guardarConfigSheets()">Guardar y autorizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PDF -->
+<div class="modal-overlay" id="modalPDF">
+  <div class="modal">
+    <h2>Generar PDF de liquidacion</h2>
+    <p>Selecciona que PDF generar. Los recibos individuales se generan uno por vez o todos juntos.</p>
+    <label>Periodo (ej: Abril 2025)</label>
+    <input type="text" id="pdf_periodo" placeholder="Abril 2025">
+    <label style="margin-top:14px">Tipo de PDF</label>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+      <label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">
+        <input type="radio" name="pdf_tipo" value="global" checked> Liquidacion global (todos los empleados, un PDF)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">
+        <input type="radio" name="pdf_tipo" value="individual"> Recibos individuales (un PDF por empleado, descarga en ZIP)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">
+        <input type="radio" name="pdf_tipo" value="ambos"> Ambos
+      </label>
+    </div>
+    <label style="margin-top:14px">Filtrar empleado (opcional)</label>
+    <select id="pdf_emp"><option value="">Todos los empleados</option></select>
+    <div class="pdf-progress" id="pdfProgress">Generando PDF...</div>
+    <div class="modal-btns">
+      <button class="btn" onclick="cerrarModal('modalPDF')">Cancelar</button>
+      <button class="btn btn-blue" onclick="generarPDF()">Generar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECIBO TEMPLATE (oculto, usado para PDF) -->
+<div id="reciboTemplate" style="position:absolute;left:-9999px;top:0;width:794px;background:#fff;font-family:system-ui,sans-serif;font-size:12px;color:#1c1c1b"></div>
+
+<script>
+var FERIADOS = new Set(['2025-01-01','2025-03-03','2025-03-04','2025-04-02','2025-04-17','2025-04-18','2025-05-01','2025-05-25','2025-06-16','2025-06-20','2025-07-09','2025-08-17','2025-10-12','2025-11-20','2025-11-21','2025-12-08','2025-12-25','2026-01-01','2026-02-16','2026-02-17','2026-04-02','2026-04-03','2026-04-06','2026-05-01','2026-05-25','2026-06-15','2026-06-20','2026-07-09','2026-08-17','2026-10-12','2026-11-20','2026-11-23','2026-12-08','2026-12-25']);
+
+var EJEMPLO = 'UDISKLOG version=2 date=20250408 firmware=1.0\nNo Mchn EnNo  Name  Mode IOMd DateTime \n000001\t1\t000000001\tCristian      \t268435456\t2305\t2025/04/08\t08:00:00\n000002\t1\t000000001\tCristian      \t268435456\t2305\t2025/04/08\t09:30:00\n000003\t1\t000000001\tCristian      \t268435456\t2305\t2025/04/08\t10:00:00\n000004\t1\t000000001\tCristian      \t268435456\t2305\t2025/04/08\t11:15:00\n000005\t1\t000000001\tCristian      \t268435456\t2305\t2025/04/08\t11:50:00\n000006\t1\t000000001\tCristian      \t268435456\t2305\t2025/04/08\t16:00:00\n000007\t1\t000000002\tBruno         \t268435456\t2305\t2025/04/08\t08:00:00\n000008\t1\t000000002\tBruno         \t268435456\t2305\t2025/04/08\t10:00:00\n000009\t1\t000000002\tBruno         \t268435456\t2305\t2025/04/08\t11:10:00\n000010\t1\t000000002\tBruno         \t268435456\t2305\t2025/04/08\t16:00:00\n000011\t1\t000000003\tMarcelo       \t268435456\t2305\t2025/04/08\t08:00:00\n000012\t1\t000000003\tMarcelo       \t268435456\t2305\t2025/04/08\t12:00:00\n000013\t1\t000000003\tMarcelo       \t268435456\t2305\t2025/04/08\t12:30:00\n000014\t1\t000000003\tMarcelo       \t268435456\t2305\t2025/04/08\t16:00:00\n';
+
+var datosGlobales = null;
+var gToken = null;
+var gSheetId = '';
+var gHoja = 'Registros';
+
+// ---- INIT ----
+document.getElementById('cfg_modo').addEventListener('change',function(){
+  document.getElementById('rotationSection').classList.toggle('visible',this.value==='alta');
+});
+
+function switchTab(n,el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  [0,1,2].forEach(function(i){document.getElementById('tab'+i).style.display=i===n?'':'none';});
+}
+function cargarEjemplo(){document.getElementById('logInput').value=EJEMPLO;}
+function limpiarTodo(){document.getElementById('logInput').value='';document.getElementById('reportSection').style.display='none';document.getElementById('emptyState').style.display='';document.getElementById('nameEditorSection').style.display='none';datosGlobales=null;}
+function cerrarModal(id){document.getElementById(id).classList.remove('open');}
+
+// ---- PARSE ----
+function parsearLog(texto){
+  var lineas=texto.split('\n').slice(2),marcaciones=[];
+  for(var i=0;i<lineas.length;i++){
+    var l=lineas[i];if(!l.trim())continue;
+    var p=l.split('\t').map(function(x){return x.trim();});
+    if(p.length<8)continue;
+    var fechaISO=p[6].replace(/\//g,'-');
+    var dt=new Date(fechaISO+'T'+p[7]);
+    if(isNaN(dt.getTime()))continue;
+    marcaciones.push({enNo:p[2],nombre:(p[3]||'').trim(),fecha:fechaISO,dt:dt});
+  }
+  return marcaciones;
+}
+
+function getSector(nombre){
+  var n=nombre.toLowerCase();
+  var pl=document.getElementById('cfg_planta').value.split(',').map(function(x){return x.trim().toLowerCase();}).filter(Boolean);
+  var co=document.getElementById('cfg_comercial').value.split(',').map(function(x){return x.trim().toLowerCase();}).filter(Boolean);
+  for(var i=0;i<pl.length;i++){if(n.indexOf(pl[i])>=0)return 'Planta';}
+  for(var i=0;i<co.length;i++){if(n.indexOf(co[i])>=0)return 'Comercial';}
+  return 'Sin sector';
+}
+
+function getTurno(nombre,fecha){
+  var modo=document.getElementById('cfg_modo').value;
+  var sector=getSector(nombre);
+  if(modo==='baja')return{tipo:'diurno',label:'08-16',start:8,end:16};
+  if(sector==='Comercial')return{tipo:'diurno',label:'Diurno',start:8,end:16};
+  var lunes0=new Date(document.getElementById('cfg_lunes').value+'T00:00:00');
+  var fechaDt=new Date(fecha+'T00:00:00');
+  var diffDays=Math.floor((fechaDt-lunes0)/86400000);
+  var semIdx=((Math.floor(diffDays/7)%3)+3)%3;
+  var turnos=[document.getElementById('cfg_s1').value,document.getElementById('cfg_s2').value,document.getElementById('cfg_s3').value];
+  var t=turnos[semIdx];
+  if(t==='manana')return{tipo:'manana',label:'Manana',start:6,end:14};
+  if(t==='tarde')return{tipo:'tarde',label:'Tarde',start:14,end:22};
+  return{tipo:'noche',label:'Noche',start:22,end:6};
+}
+
+function getTipoDia(fecha){
+  var d=new Date(fecha+'T12:00:00'),dow=d.getDay();
+  if(FERIADOS.has(fecha))return'Feriado';
+  if(dow===0)return'Domingo';
+  if(dow===6)return'Sabado';
+  return'Normal';
+}
+
+function minEntre(a,b){return(b.getTime()-a.getTime())/60000;}
+
+function procesarEmpleadoDia(marcaciones){
+  if(marcaciones.length<2)return null;
+  marcaciones.sort(function(a,b){return a.dt-b.dt;});
+  var entrada=marcaciones[0],salida=marcaciones[marcaciones.length-1];
+  var intermedias=marcaciones.slice(1,-1),descansos=[];
+  for(var i=0;i<intermedias.length-1;i+=2){
+    var dur=minEntre(intermedias[i].dt,intermedias[i+1].dt);
+    descansos.push({salida:intermedias[i].dt,regreso:intermedias[i+1].dt,duracion:dur,sinRegreso:false});
+  }
+  if(intermedias.length%2!==0){
+    descansos.push({salida:intermedias[intermedias.length-1].dt,regreso:null,duracion:null,sinRegreso:true});
+  }
+  var franquicia=parseFloat(document.getElementById('cfg_franquicia').value)||60;
+  var totalDesc=descansos.reduce(function(s,d){return s+(d.duracion||0);},0);
+  var descDesc=Math.max(0,totalDesc-franquicia);
+  var horasBase_cfg=parseFloat(document.getElementById('cfg_horas_base').value)||8;
+  var horasTotales=minEntre(entrada.dt,salida.dt)/60;
+  var horasTrabajadas=Math.max(0,horasTotales-descDesc/60);
+  var horasExtra=Math.max(0,horasTrabajadas-horasBase_cfg);
+  return{entrada:entrada.dt,salida:salida.dt,descansos:descansos,totalDescMin:totalDesc,descDescMin:descDesc,horasTrabajadas:horasTrabajadas,horasExtra:horasExtra};
+}
+
+function calcularPago(jornada,nombre,fecha){
+  var turno=getTurno(nombre,fecha);
+  var tipoDia=getTipoDia(fecha);
+  var mult=1;
+  if(tipoDia==='Sabado'&&jornada.horasTrabajadas>4)mult=2;
+  if(tipoDia==='Domingo'||tipoDia==='Feriado')mult=2;
+  var tDiurna=parseFloat(document.getElementById('cfg_tarifa_diurna').value)||4500;
+  var tNocturna=parseFloat(document.getElementById('cfg_tarifa_nocturna').value)||5300;
+  var extraPct=(parseFloat(document.getElementById('cfg_extra_pct').value)||12)/100;
+  var tBase=turno.tipo==='noche'?tNocturna:tDiurna;
+  var tExtra=tBase*(1+extraPct);
+  var hsNorm=jornada.horasTrabajadas-jornada.horasExtra;
+  var total=(hsNorm*tBase+jornada.horasExtra*tExtra)*mult;
+
+  // Desglose de horas por tipo
+  var esNoche=turno.tipo==='noche';
+  var desglose={
+    normDiurna: (!esNoche&&mult===1)?hsNorm:0,
+    normNocturna: (esNoche&&mult===1)?hsNorm:0,
+    extraDiurna: (!esNoche&&mult===1)?jornada.horasExtra:0,
+    extraNocturna: (esNoche&&mult===1)?jornada.horasExtra:0,
+    hsSabado: (tipoDia==='Sabado'&&mult===2)?jornada.horasTrabajadas:0,
+    hsDomingo: (tipoDia==='Domingo')?jornada.horasTrabajadas:0,
+    hsFeriado: (tipoDia==='Feriado')?jornada.horasTrabajadas:0
+  };
+  return{total:total,turno:turno,tipoDia:tipoDia,mult:mult,tBase:tBase,tExtra:tExtra,desglose:desglose};
+}
+
+// ---- PROCESAR ----
+function procesarLog(){
+  var texto=document.getElementById('logInput').value;
+  if(!texto.trim()){alert('Pega el log del reloj primero.');return;}
+  var marcaciones=parsearLog(texto);
+  if(!marcaciones.length){alert('No se encontraron marcaciones validas.');return;}
+  var agrupado={};
+  for(var i=0;i<marcaciones.length;i++){
+    var m=marcaciones[i],key=m.enNo+'|'+m.fecha;
+    if(!agrupado[key])agrupado[key]={enNo:m.enNo,nombre:m.nombre,fecha:m.fecha,marcaciones:[]};
+    if(m.nombre&&!agrupado[key].nombre)agrupado[key].nombre=m.nombre;
+    agrupado[key].marcaciones.push(m);
+  }
+  var sinNombre={};
+  Object.keys(agrupado).forEach(function(k){if(!agrupado[k].nombre)sinNombre[agrupado[k].enNo]='';});
+  if(Object.keys(sinNombre).length>0){mostrarEditorNombres(sinNombre,agrupado);return;}
+  generarReporte(agrupado);
+}
+
+function mostrarEditorNombres(sinNombre,agrupado){
+  document.getElementById('nameEditorSection').style.display='';
+  var lista=document.getElementById('nameEditorList');lista.innerHTML='';
+  Object.keys(sinNombre).forEach(function(enNo){
+    var d=document.createElement('div');d.className='name-editor-item';
+    d.innerHTML='<span class="chip">#'+enNo+'</span><input type="text" placeholder="Nombre del empleado" id="ne_'+enNo+'">';
+    lista.appendChild(d);
+  });
+  window._ag=agrupado;window._sn=sinNombre;
+  document.getElementById('reportSection').style.display='none';
+  document.getElementById('emptyState').style.display='none';
+}
+
+function confirmarNombres(){
+  var agrupado=window._ag,sinNombre=window._sn;
+  var ok=true;
+  Object.keys(sinNombre).forEach(function(enNo){
+    var inp=document.getElementById('ne_'+enNo);
+    if(!inp||!inp.value.trim()){ok=false;return;}
+    Object.keys(agrupado).forEach(function(k){if(agrupado[k].enNo===enNo&&!agrupado[k].nombre)agrupado[k].nombre=inp.value.trim();});
+  });
+  if(!ok){alert('Completa todos los nombres.');return;}
+  document.getElementById('nameEditorSection').style.display='none';
+  generarReporte(agrupado);
+}
+
+function generarReporte(agrupado){
+  var jornadas=[],todosDescansos=[];
+  Object.keys(agrupado).forEach(function(k){
+    var v=agrupado[k],j=procesarEmpleadoDia(v.marcaciones);
+    if(!j)return;
+    var pago=calcularPago(j,v.nombre,v.fecha);
+    jornadas.push({enNo:v.enNo,nombre:v.nombre,sector:getSector(v.nombre),fecha:v.fecha,
+      entrada:j.entrada,salida:j.salida,descansos:j.descansos,
+      totalDescMin:j.totalDescMin,descDescMin:j.descDescMin,
+      horasTrabajadas:j.horasTrabajadas,horasExtra:j.horasExtra,
+      total:pago.total,turno:pago.turno,tipoDia:pago.tipoDia,mult:pago.mult,
+      tBase:pago.tBase,tExtra:pago.tExtra,desglose:pago.desglose});
+    j.descansos.forEach(function(d){todosDescansos.push({nombre:v.nombre,fecha:v.fecha,salida:d.salida,regreso:d.regreso,duracion:d.duracion,sinRegreso:d.sinRegreso});});
+  });
+  jornadas.sort(function(a,b){var r=a.fecha.localeCompare(b.fecha);return r!==0?r:a.nombre.localeCompare(b.nombre);});
+
+  // Resumen por empleado con desglose
+  var resumen={};
+  jornadas.forEach(function(j){
+    if(!resumen[j.nombre])resumen[j.nombre]={nombre:j.nombre,sector:j.sector,dias:0,horas:0,extra:0,descMin:0,dobles:0,total:0,
+      normDiurna:0,normNocturna:0,extraDiurna:0,extraNocturna:0,hsSabado:0,hsDomingo:0,hsFeriado:0,jornadas:[]};
+    var r=resumen[j.nombre];
+    r.dias++;r.horas+=j.horasTrabajadas;r.extra+=j.horasExtra;r.descMin+=j.descDescMin;
+    if(j.mult===2)r.dobles++;r.total+=j.total;
+    r.normDiurna+=j.desglose.normDiurna;r.normNocturna+=j.desglose.normNocturna;
+    r.extraDiurna+=j.desglose.extraDiurna;r.extraNocturna+=j.desglose.extraNocturna;
+    r.hsSabado+=j.desglose.hsSabado;r.hsDomingo+=j.desglose.hsDomingo;r.hsFeriado+=j.desglose.hsFeriado;
+    r.jornadas.push(j);
+  });
+
+  datosGlobales={jornadas:jornadas,descansos:todosDescansos,resumen:Object.values(resumen)};
+
+  // Metricas
+  var empCount=Object.keys(resumen).length;
+  var totHoras=jornadas.reduce(function(s,j){return s+j.horasTrabajadas;},0);
+  var totExtra=jornadas.reduce(function(s,j){return s+j.horasExtra;},0);
+  var totPago=jornadas.reduce(function(s,j){return s+j.total;},0);
+  document.getElementById('met_emp').textContent=empCount;
+  document.getElementById('met_hs').textContent=totHoras.toFixed(1)+'h';
+  document.getElementById('met_ex').textContent=totExtra.toFixed(1)+'h';
+  document.getElementById('met_tot').textContent='$'+Math.round(totPago).toLocaleString('es-AR');
+
+  // Filtros
+  var sel=document.getElementById('fil_emp');sel.innerHTML='<option value="">Todos</option>';
+  var pdfSel=document.getElementById('pdf_emp');pdfSel.innerHTML='<option value="">Todos los empleados</option>';
+  Object.keys(resumen).sort().forEach(function(n){
+    var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);
+    var o2=document.createElement('option');o2.value=n;o2.textContent=n;pdfSel.appendChild(o2);
+  });
+
+  document.getElementById('reportSection').style.display='';
+  document.getElementById('emptyState').style.display='none';
+  renderReportes();
+}
+
+// ---- HELPERS ----
+function filtrarDatos(){
+  if(!datosGlobales)return{jornadas:[],descansos:[],resumen:[]};
+  var emp=document.getElementById('fil_emp').value,sec=document.getElementById('fil_sec').value;
+  return{
+    jornadas:datosGlobales.jornadas.filter(function(x){return(!emp||x.nombre===emp)&&(!sec||x.sector===sec);}),
+    descansos:datosGlobales.descansos.filter(function(x){return(!emp||x.nombre===emp)&&(!sec||getSector(x.nombre)===sec);}),
+    resumen:datosGlobales.resumen.filter(function(x){return(!emp||x.nombre===emp)&&(!sec||x.sector===sec);})
+  };
+}
+
+function avClass(n){n=n.toLowerCase();if(n.indexOf('cri')===0)return'av-c';if(n.indexOf('br')===0)return'av-b';if(n.indexOf('go')===0)return'av-g';if(n.indexOf('ju')===0)return'av-j';if(n.indexOf('je')===0)return'av-je';if(n.indexOf('ma')===0)return'av-m';return'av-x';}
+function iniciales(n){return n.split(' ').map(function(p){return p[0]||'';}).join('').toUpperCase().slice(0,2);}
+function bSector(s){var m={Planta:'badge-planta',Comercial:'badge-comercial','Sin sector':'badge-sin'};return'<span class="badge '+(m[s]||'badge-sin')+'">'+s+'</span>';}
+function bTurno(t){if(!t)return'';var m={manana:'badge-manana',tarde:'badge-tarde',noche:'badge-noche',diurno:'badge-diurno'};var l={manana:'Manana',tarde:'Tarde',noche:'Noche',diurno:'08-16'};return'<span class="badge '+(m[t.tipo]||'badge-diurno')+'">'+(l[t.tipo]||t.label)+'</span>';}
+function bDia(tipo,mult){if(mult===2){if(tipo==='Sabado')return'<span class="badge badge-doble">Sab. doble</span>';if(tipo==='Feriado')return'<span class="badge badge-doble">Feriado</span>';if(tipo==='Domingo')return'<span class="badge badge-doble">Domingo</span>';}if(tipo==='Sabado')return'<span class="badge badge-sabado">Sabado</span>';return'<span class="badge badge-normal">Normal</span>';}
+function fmtH(dt){if(!dt)return'-';return dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');}
+function fmtF(s){var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function pesos(n){return'$'+Math.round(n).toLocaleString('es-AR');}
+function hs(n){return n>0?n.toFixed(2)+'h':'-';}
+
+// ---- RENDER ----
+function renderReportes(){
+  var datos=filtrarDatos(),franquicia=parseFloat(document.getElementById('cfg_franquicia').value)||60;
+
+  // Tab 0
+  var b0=document.getElementById('body_detalle');b0.innerHTML='';
+  datos.jornadas.forEach(function(j){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><div class="name-cell"><div class="avatar '+avClass(j.nombre)+'">'+iniciales(j.nombre)+'</div>'+j.nombre+'</div></td>'
+      +'<td>'+bSector(j.sector)+'</td><td>'+fmtF(j.fecha)+'</td><td>'+fmtH(j.entrada)+'</td><td>'+fmtH(j.salida)+'</td>'
+      +'<td>'+bTurno(j.turno)+'</td><td>'+Math.round(j.totalDescMin)+' min</td><td>'+Math.round(j.descDescMin)+' min</td>'
+      +'<td>'+j.horasTrabajadas.toFixed(2)+'h</td><td>'+(j.horasExtra>0?j.horasExtra.toFixed(2)+'h':'-')+'</td>'
+      +'<td>'+bDia(j.tipoDia,j.mult)+'</td><td><strong>'+pesos(j.total)+'</strong></td>';
+    b0.appendChild(tr);
+  });
+
+  // Tab 1
+  var b1=document.getElementById('body_descansos');b1.innerHTML='';
+  datos.descansos.forEach(function(d){
+    var estado=d.sinRegreso?'<span class="badge badge-sinregreso">Sin regreso</span>'
+      :(d.duracion!==null&&d.duracion>franquicia?'<span class="badge badge-excede">Excede franquicia</span>'
+      :'<span class="badge badge-ok">Dentro de franquicia</span>');
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><div class="name-cell"><div class="avatar '+avClass(d.nombre)+'">'+iniciales(d.nombre)+'</div>'+d.nombre+'</div></td>'
+      +'<td>'+fmtF(d.fecha)+'</td><td>'+fmtH(d.salida)+'</td><td>'+(d.regreso?fmtH(d.regreso):'-')+'</td>'
+      +'<td>'+(d.duracion!==null?Math.round(d.duracion)+' min':'-')+'</td><td>'+estado+'</td>';
+    b1.appendChild(tr);
+  });
+
+  // Tab 2 - Resumen expandible
+  var b2=document.getElementById('body_resumen');b2.innerHTML='';
+  var totals={dias:0,horas:0,nd:0,nn:0,ed:0,en:0,hs:0,hd:0,hf:0,desc:0,tot:0};
+  datos.resumen.forEach(function(r){
+    totals.dias+=r.dias;totals.horas+=r.horas;totals.nd+=r.normDiurna;totals.nn+=r.normNocturna;
+    totals.ed+=r.extraDiurna;totals.en+=r.extraNocturna;totals.hs+=r.hsSabado;totals.hd+=r.hsDomingo;
+    totals.hf+=r.hsFeriado;totals.desc+=r.descMin;totals.tot+=r.total;
+
+    var rowId='row_'+r.nombre.replace(/\s/g,'_');
+    var trMain=document.createElement('tr');trMain.className='data-row';trMain.id=rowId;
+    trMain.onclick=function(){toggleExpand(r,rowId);};
+    trMain.innerHTML='<td><i class="expand-icon">&#9654;</i></td>'
+      +'<td><div class="name-cell"><div class="avatar '+avClass(r.nombre)+'">'+iniciales(r.nombre)+'</div>'+r.nombre+'</div></td>'
+      +'<td>'+bSector(r.sector)+'</td><td>'+r.dias+'</td>'
+      +'<td>'+(r.normDiurna>0?'<span class="hs-chip hc-n">'+r.normDiurna.toFixed(1)+'h</span>':'-')+'</td>'
+      +'<td>'+(r.normNocturna>0?'<span class="hs-chip hc-nc">'+r.normNocturna.toFixed(1)+'h</span>':'-')+'</td>'
+      +'<td>'+(r.extraDiurna>0?'<span class="hs-chip hc-e">'+r.extraDiurna.toFixed(1)+'h</span>':'-')+'</td>'
+      +'<td>'+(r.extraNocturna>0?'<span class="hs-chip hc-nc">'+r.extraNocturna.toFixed(1)+'h extra</span>':'-')+'</td>'
+      +'<td>'+(r.hsSabado>0?'<span class="hs-chip hc-s">'+r.hsSabado.toFixed(1)+'h</span>':'-')+'</td>'
+      +'<td>'+(r.hsDomingo>0?'<span class="hs-chip hc-d">'+r.hsDomingo.toFixed(1)+'h</span>':'-')+'</td>'
+      +'<td>'+(r.hsFeriado>0?'<span class="hs-chip hc-f">'+r.hsFeriado.toFixed(1)+'h</span>':'-')+'</td>'
+      +'<td>'+Math.round(r.descMin)+' min</td>'
+      +'<td><strong>'+pesos(r.total)+'</strong></td>';
+    b2.appendChild(trMain);
+
+    // Fila expandida (oculta)
+    var trExp=document.createElement('tr');trExp.className='expand-row';trExp.id='exp_'+rowId;trExp.style.display='none';
+    var tdExp=document.createElement('td');tdExp.colSpan=13;
+    var tDiurna=parseFloat(document.getElementById('cfg_tarifa_diurna').value)||4500;
+    var tNocturna=parseFloat(document.getElementById('cfg_tarifa_nocturna').value)||5300;
+    var extraPct=(parseFloat(document.getElementById('cfg_extra_pct').value)||12)/100;
+    var innerHtml='<div class="expand-inner">'
+      +'<strong style="font-size:12px;color:#374151">Detalle por jornada de '+r.nombre+'</strong>'
+      +'<table class="sub-table" style="margin-top:8px">'
+      +'<thead><tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Turno</th><th>Tipo dia</th>'
+      +'<th>Hs norm.</th><th>Tarifa norm.</th><th>Hs extra</th><th>Tarifa extra</th>'
+      +'<th>Hs sab/dom/fer</th><th>Multiplicador</th><th>Total $</th></tr></thead><tbody>';
+    r.jornadas.forEach(function(j){
+      var esNoche=j.turno&&j.turno.tipo==='noche';
+      var tBase=esNoche?tNocturna:tDiurna;
+      var tExt=tBase*(1+extraPct);
+      var hsNorm=j.horasTrabajadas-j.horasExtra;
+      var esDobleDia=j.mult===2;
+      var tipoEsp=j.tipoDia==='Normal'?'':j.tipoDia;
+      var hsSab=j.desglose.hsSabado>0?j.desglose.hsSabado.toFixed(2)+'h':'';
+      var hsDom=j.desglose.hsDomingo>0?j.desglose.hsDomingo.toFixed(2)+'h':'';
+      var hsFer=j.desglose.hsFeriado>0?j.desglose.hsFeriado.toFixed(2)+'h':'';
+      var hsDobleTxt=hsSab||hsDom||hsFer||'-';
+      innerHtml+='<tr>'
+        +'<td>'+fmtF(j.fecha)+'</td><td>'+fmtH(j.entrada)+'</td><td>'+fmtH(j.salida)+'</td>'
+        +'<td>'+bTurno(j.turno)+'</td><td>'+bDia(j.tipoDia,j.mult)+'</td>'
+        +'<td>'+hsNorm.toFixed(2)+'h</td>'
+        +'<td>'+pesos(tBase)+'/h'+(esDobleDia?' x2':'')+'</td>'
+        +'<td>'+(j.horasExtra>0?j.horasExtra.toFixed(2)+'h':'-')+'</td>'
+        +'<td>'+(j.horasExtra>0?pesos(tExt)+'/h'+(esDobleDia?' x2':''):'-')+'</td>'
+        +'<td>'+hsDobleTxt+'</td>'
+        +'<td>'+(j.mult===2?'x2 (doble)':'x1')+'</td>'
+        +'<td><strong>'+pesos(j.total)+'</strong></td>'
+        +'</tr>';
+    });
+    innerHtml+='</tbody></table></div>';
+    tdExp.innerHTML=innerHtml;
+    trExp.appendChild(tdExp);
+    b2.appendChild(trExp);
+  });
+
+  // Total general
+  var tot=document.createElement('tr');tot.className='total-row';
+  tot.innerHTML='<td></td><td colspan="2">Total general</td><td>'+totals.dias+'</td>'
+    +'<td>'+(totals.nd>0?totals.nd.toFixed(1)+'h':'-')+'</td>'
+    +'<td>'+(totals.nn>0?totals.nn.toFixed(1)+'h':'-')+'</td>'
+    +'<td>'+(totals.ed>0?totals.ed.toFixed(1)+'h':'-')+'</td>'
+    +'<td>'+(totals.en>0?totals.en.toFixed(1)+'h':'-')+'</td>'
+    +'<td>'+(totals.hs>0?totals.hs.toFixed(1)+'h':'-')+'</td>'
+    +'<td>'+(totals.hd>0?totals.hd.toFixed(1)+'h':'-')+'</td>'
+    +'<td>'+(totals.hf>0?totals.hf.toFixed(1)+'h':'-')+'</td>'
+    +'<td>'+Math.round(totals.desc)+' min</td>'
+    +'<td>'+pesos(totals.tot)+'</td>';
+  b2.appendChild(tot);
+}
+
+function toggleExpand(r,rowId){
+  var mainRow=document.getElementById(rowId);
+  var expRow=document.getElementById('exp_'+rowId);
+  var isOpen=expRow.style.display!=='none';
+  expRow.style.display=isOpen?'none':'';
+  mainRow.classList.toggle('expanded',!isOpen);
+}
+
+// ---- CSV ----
+function exportarCSV(){
+  if(!datosGlobales){alert('No hay datos para exportar.');return;}
+  var datos=filtrarDatos(),jornadas=datos.jornadas;
+  var cols=['Empleado','Sector','Fecha','Entrada','Salida','Turno','Desc total (min)','Desc descontado (min)','Hs trabajadas','Hs extra','Tipo dia','Total $','Hs norm diurna','Hs norm nocturna','Hs extra diurna','Hs extra nocturna','Hs sabado','Hs domingo','Hs feriado'];
+  var rows=jornadas.map(function(j){return[j.nombre,j.sector,fmtF(j.fecha),fmtH(j.entrada),fmtH(j.salida),j.turno?j.turno.label:'',Math.round(j.totalDescMin),Math.round(j.descDescMin),j.horasTrabajadas.toFixed(2),j.horasExtra.toFixed(2),j.tipoDia,Math.round(j.total),j.desglose.normDiurna.toFixed(2),j.desglose.normNocturna.toFixed(2),j.desglose.extraDiurna.toFixed(2),j.desglose.extraNocturna.toFixed(2),j.desglose.hsSabado.toFixed(2),j.desglose.hsDomingo.toFixed(2),j.desglose.hsFeriado.toFixed(2)];});
+  var csv=[cols].concat(rows).map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='asistencia_liquidacion.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+// ---- GOOGLE SHEETS ----
+// Al cargar la pagina, revisar si venimos de un redirect OAuth con token en el hash
+(function checkOAuthRedirect(){
+  var hash=window.location.hash;
+  if(!hash)return;
+  var params={};
+  hash.replace(/^#/,'').split('&').forEach(function(p){var kv=p.split('=');params[kv[0]]=decodeURIComponent(kv[1]||'');});
+  if(params.access_token){
+    gToken=params.access_token;
+    // Limpiar el token de la URL sin recargar la pagina
+    history.replaceState(null,null,window.location.pathname+window.location.search);
+    // Restaurar configuracion guardada en sessionStorage
+    var cfg=sessionStorage.getItem('sheets_cfg');
+    if(cfg){try{var c=JSON.parse(cfg);gSheetId=c.sheetId;gHoja=c.hoja;document.getElementById('cfg_gclient').value=c.clientId||'';document.getElementById('cfg_gsheet').value=c.sheetId||'';}catch(e){}}
+    mostrarSheetsStatus(true,'Conectado a Google correctamente. Listo para enviar datos.');
+  }
+})();
+
+function abrirModalSheets(){
+  document.getElementById('m_gclient').value=document.getElementById('cfg_gclient').value;
+  document.getElementById('m_gsheet').value=document.getElementById('cfg_gsheet').value;
+  // Calcular URLs exactas para mostrar en el modal
+  var href=window.location.href.split('#')[0].split('?')[0];
+  if(!href.match(/\.[a-z]+$/i)&&href.slice(-1)!=='/') href+='/';
+  var origen=window.location.protocol+'//'+window.location.host;
+  var urlO=document.getElementById('urlOrigen');
+  var urlR=document.getElementById('urlRedirect');
+  if(urlO)urlO.textContent=origen;
+  if(urlR)urlR.textContent=href;
+  document.getElementById('modalSheets').classList.add('open');
+}
+
+function guardarConfigSheets(){
+  var clientId=document.getElementById('m_gclient').value.trim();
+  var sheetId=document.getElementById('m_gsheet').value.trim();
+  var hoja=document.getElementById('m_ghoja').value.trim()||'Registros';
+  if(!clientId||!sheetId){alert('Completa el Client ID y el ID de la planilla.');return;}
+  document.getElementById('cfg_gclient').value=clientId;
+  document.getElementById('cfg_gsheet').value=sheetId;
+  gSheetId=sheetId;gHoja=hoja;
+  // Guardar config para restaurar despues del redirect
+  sessionStorage.setItem('sheets_cfg',JSON.stringify({clientId:clientId,sheetId:sheetId,hoja:hoja}));
+  cerrarModal('modalSheets');
+  autorizarGoogle(clientId);
+}
+
+function autorizarGoogle(clientId){
+  var scope='https://www.googleapis.com/auth/spreadsheets';
+  // URI de redirect: URL exacta de la pagina sin hash ni query
+  var href=window.location.href;
+  var redirectUri=href.split('#')[0].split('?')[0];
+  // Asegurar trailing slash si la URL termina en el repo (sin archivo)
+  if(!redirectUri.match(/\.[a-z]+$/i)&&redirectUri.slice(-1)!=='/') redirectUri+='/';
+  var url='https://accounts.google.com/o/oauth2/v2/auth'
+    +'?client_id='+encodeURIComponent(clientId)
+    +'&response_type=token'
+    +'&scope='+encodeURIComponent(scope)
+    +'&redirect_uri='+encodeURIComponent(redirectUri)
+    +'&include_granted_scopes=true'
+    +'&prompt=select_account';
+  window.location.href=url;
+}
+
+function mostrarSheetsStatus(ok,msg){
+  var el=document.getElementById('sheetsStatus');
+  el.style.display='';el.className='sheets-status '+(ok?'sheets-ok':'sheets-err');
+  el.textContent=msg;
+}
+
+function enviarSheets(){
+  if(!gToken){
+    var clientId=document.getElementById('cfg_gclient').value.trim();
+    if(!clientId){alert('Primero configura la conexion con Google Sheets en el panel lateral.');return;}
+    alert('Primero autoriza la conexion haciendo clic en "Configurar y conectar" en el panel lateral.');
+    return;
+  }
+  if(!datosGlobales){alert('No hay datos para enviar.');return;}
+  var datos=filtrarDatos(),jornadas=datos.jornadas;
+  if(!jornadas.length){alert('No hay jornadas en el filtro actual.');return;}
+
+  // Cabecera + filas
+  var valores=[['Empleado','Sector','Fecha','Entrada','Salida','Turno','Desc total (min)','Desc desc. (min)','Hs trabajadas','Hs extra','Hs norm diurna','Hs norm nocturna','Hs extra diurna','Hs extra nocturna','Hs sabado','Hs domingo','Hs feriado','Tipo dia','Total $','Fecha envio']];
+  var fechaEnvio=new Date().toLocaleDateString('es-AR');
+  jornadas.forEach(function(j){
+    valores.push([j.nombre,j.sector,fmtF(j.fecha),fmtH(j.entrada),fmtH(j.salida),j.turno?j.turno.label:'',Math.round(j.totalDescMin),Math.round(j.descDescMin),parseFloat(j.horasTrabajadas.toFixed(2)),parseFloat(j.horasExtra.toFixed(2)),parseFloat(j.desglose.normDiurna.toFixed(2)),parseFloat(j.desglose.normNocturna.toFixed(2)),parseFloat(j.desglose.extraDiurna.toFixed(2)),parseFloat(j.desglose.extraNocturna.toFixed(2)),parseFloat(j.desglose.hsSabado.toFixed(2)),parseFloat(j.desglose.hsDomingo.toFixed(2)),parseFloat(j.desglose.hsFeriado.toFixed(2)),j.tipoDia,Math.round(j.total),fechaEnvio]);
+  });
+
+  var sheetId=document.getElementById('cfg_gsheet').value.trim();
+  var rango=encodeURIComponent(gHoja+'!A1');
+  fetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+rango+':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+gToken,'Content-Type':'application/json'},
+    body:JSON.stringify({values:valores})
+  }).then(function(r){
+    if(r.ok){mostrarSheetsStatus(true,'Datos enviados correctamente a Sheets ('+jornadas.length+' jornadas).');}
+    else{r.json().then(function(e){mostrarSheetsStatus(false,'Error: '+(e.error?e.error.message:'desconocido'));});}
+  }).catch(function(e){mostrarSheetsStatus(false,'Error de conexion: '+e.message);});
+}
+
+// ---- PDF ----
+function abrirModalPDF(){
+  if(!datosGlobales){alert('Procesa el log primero.');return;}
+  document.getElementById('modalPDF').classList.add('open');
+}
+
+function buildReciboHTML(r,periodo,empresa){
+  var tDiurna=parseFloat(document.getElementById('cfg_tarifa_diurna').value)||4500;
+  var tNocturna=parseFloat(document.getElementById('cfg_tarifa_nocturna').value)||5300;
+  var extraPct=(parseFloat(document.getElementById('cfg_extra_pct').value)||12)/100;
+  var hoy=new Date().toLocaleDateString('es-AR');
+
+  var filas='';
+  r.jornadas.forEach(function(j){
+    var esNoche=j.turno&&j.turno.tipo==='noche';
+    var tBase=esNoche?tNocturna:tDiurna;
+    var tExt=tBase*(1+extraPct);
+    var hsNorm=j.horasTrabajadas-j.horasExtra;
+    var descTipo=j.tipoDia==='Normal'?'':' / '+j.tipoDia+(j.mult===2?' (x2)':'');
+    filas+='<tr>'
+      +'<td>'+fmtF(j.fecha)+'</td>'
+      +'<td>'+(j.turno?j.turno.label:'-')+'</td>'
+      +'<td>'+fmtH(j.entrada)+' - '+fmtH(j.salida)+'</td>'
+      +'<td style="text-align:right">'+hsNorm.toFixed(2)+'</td>'
+      +'<td style="text-align:right">'+(j.horasExtra>0?j.horasExtra.toFixed(2):'-')+'</td>'
+      +'<td style="text-align:right">'+(j.mult===2?j.horasTrabajadas.toFixed(2):'-')+'</td>'
+      +'<td style="text-align:right">'+Math.round(j.descDescMin)+'</td>'
+      +'<td style="text-align:right;font-weight:600">'+pesos(j.total)+'</td>'
+      +'</tr>';
+  });
+
+  return '<div style="padding:40px;font-size:12px;color:#1c1c1b;font-family:system-ui,sans-serif;page-break-after:always">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">'
+    +'<div><div style="font-size:20px;font-weight:700;letter-spacing:-.5px">'+empresa+'</div>'
+    +'<div style="color:#6b7280;margin-top:4px">Liquidacion de haberes &mdash; '+periodo+'</div></div>'
+    +'<div style="text-align:right;font-size:11px;color:#6b7280"><div>Emitido: '+hoy+'</div></div></div>'
+    +'<div style="background:#f8f9fa;border-radius:8px;padding:16px;margin-bottom:20px;display:flex;gap:40px">'
+    +'<div><div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Empleado</div>'
+    +'<div style="font-size:16px;font-weight:600;margin-top:2px">'+r.nombre+'</div></div>'
+    +'<div><div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Sector</div>'
+    +'<div style="font-size:14px;font-weight:500;margin-top:2px">'+r.sector+'</div></div>'
+    +'<div><div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Dias trabajados</div>'
+    +'<div style="font-size:14px;font-weight:500;margin-top:2px">'+r.dias+'</div></div>'
+    +'<div><div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Hs totales</div>'
+    +'<div style="font-size:14px;font-weight:500;margin-top:2px">'+r.horas.toFixed(2)+'h</div></div></div>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:11px">'
+    +'<thead><tr style="background:#1c1c1b;color:#fff">'
+    +'<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Turno</th>'
+    +'<th style="padding:8px;text-align:left">Horario</th><th style="padding:8px;text-align:right">Hs norm.</th>'
+    +'<th style="padding:8px;text-align:right">Hs extra</th><th style="padding:8px;text-align:right">Hs doble</th>'
+    +'<th style="padding:8px;text-align:right">Desc. desc.</th><th style="padding:8px;text-align:right">Subtotal</th>'
+    +'</tr></thead><tbody>'+filas+'</tbody></table>'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+    +'<div style="font-size:11px;color:#6b7280;max-width:300px">'
+    +'<div style="margin-bottom:4px">Tarifa diurna: '+pesos(tDiurna)+'/h | Tarifa nocturna: '+pesos(tNocturna)+'/h</div>'
+    +'<div>Recargo extra: '+(extraPct*100).toFixed(0)+'% | Franquicia descanso: '+(document.getElementById('cfg_franquicia').value)+' min</div>'
+    +'</div>'
+    +'<div style="text-align:right">'
+    +'<div style="font-size:11px;color:#6b7280;margin-bottom:2px">Total a liquidar</div>'
+    +'<div style="font-size:28px;font-weight:700;letter-spacing:-.5px">'+pesos(r.total)+'</div></div></div>'
+    +'<div style="margin-top:40px;border-top:1px solid #e5e7eb;padding-top:16px;display:flex;gap:60px">'
+    +'<div><div style="width:160px;border-top:1px solid #1c1c1b;padding-top:4px;margin-top:32px;font-size:11px;color:#6b7280">Firma empleado</div></div>'
+    +'<div><div style="width:160px;border-top:1px solid #1c1c1b;padding-top:4px;margin-top:32px;font-size:11px;color:#6b7280">Firma empleador</div></div>'
+    +'</div></div>';
+}
+
+function generarPDF(){
+  if(!datosGlobales){return;}
+  var tipo=document.querySelector('input[name="pdf_tipo"]:checked').value;
+  var periodo=document.getElementById('pdf_periodo').value||'Liquidacion';
+  var empresa=document.getElementById('cfg_empresa').value||'Empresa';
+  var filtroEmp=document.getElementById('pdf_emp').value;
+
+  var resumenFiltrado=datosGlobales.resumen.filter(function(r){return!filtroEmp||r.nombre===filtroEmp;});
+  if(!resumenFiltrado.length){alert('No hay empleados en el filtro seleccionado.');return;}
+
+  var prog=document.getElementById('pdfProgress');prog.style.display='';
+
+  var container=document.getElementById('reciboTemplate');
+
+  if(tipo==='global'||tipo==='ambos'){
+    prog.textContent='Generando PDF global...';
+    var html='';resumenFiltrado.forEach(function(r){html+=buildReciboHTML(r,periodo,empresa);});
+    container.innerHTML=html;container.style.display='block';
+    setTimeout(function(){
+      html2canvas(container,{scale:1.5,useCORS:true,logging:false}).then(function(canvas){
+        var imgData=canvas.toDataURL('image/jpeg',0.9);
+        var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'px',format:'a4'});
+        var pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+        var cw=canvas.width,ch=canvas.height;
+        var pagesNeeded=Math.ceil(ch/(cw*(ph/pw)));
+        var sliceH=Math.floor(cw*(ph/pw));
+        for(var pg=0;pg<pagesNeeded;pg++){
+          if(pg>0)pdf.addPage();
+          var sCanvas=document.createElement('canvas');
+          sCanvas.width=cw;sCanvas.height=Math.min(sliceH,ch-pg*sliceH);
+          var ctx=sCanvas.getContext('2d');
+          ctx.drawImage(canvas,0,pg*sliceH,cw,sCanvas.height,0,0,cw,sCanvas.height);
+          pdf.addImage(sCanvas.toDataURL('image/jpeg',0.9),'JPEG',0,0,pw,sCanvas.height*(pw/cw));
+        }
+        pdf.save('liquidacion_global_'+periodo.replace(/\s/g,'_')+'.pdf');
+        container.style.display='none';
+        if(tipo==='ambos')generarPDFIndividuales(resumenFiltrado,periodo,empresa,container,prog);
+        else{prog.style.display='none';cerrarModal('modalPDF');}
+      });
+    },100);
+  } else {
+    generarPDFIndividuales(resumenFiltrado,periodo,empresa,container,prog);
+  }
+}
+
+function generarPDFIndividuales(resumenFiltrado,periodo,empresa,container,prog){
+  var idx=0;
+  function siguiente(){
+    if(idx>=resumenFiltrado.length){prog.style.display='none';cerrarModal('modalPDF');return;}
+    var r=resumenFiltrado[idx];idx++;
+    prog.textContent='Generando recibo de '+r.nombre+' ('+(idx)+'/'+resumenFiltrado.length+')...';
+    container.innerHTML=buildReciboHTML(r,periodo,empresa);container.style.display='block';
+    setTimeout(function(){
+      html2canvas(container,{scale:1.5,useCORS:true,logging:false}).then(function(canvas){
+        var imgData=canvas.toDataURL('image/jpeg',0.9);
+        var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'px',format:'a4'});
+        var pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+        var cw=canvas.width,ch=canvas.height;
+        var pagesNeeded=Math.ceil(ch/(cw*(ph/pw)));
+        var sliceH=Math.floor(cw*(ph/pw));
+        for(var pg=0;pg<pagesNeeded;pg++){
+          if(pg>0)pdf.addPage();
+          var sCanvas=document.createElement('canvas');
+          sCanvas.width=cw;sCanvas.height=Math.min(sliceH,ch-pg*sliceH);
+          var ctx=sCanvas.getContext('2d');
+          ctx.drawImage(canvas,0,pg*sliceH,cw,sCanvas.height,0,0,cw,sCanvas.height);
+          pdf.addImage(sCanvas.toDataURL('image/jpeg',0.9),'JPEG',0,0,pw,sCanvas.height*(pw/cw));
+        }
+        pdf.save('recibo_'+r.nombre.replace(/\s/g,'_')+'_'+periodo.replace(/\s/g,'_')+'.pdf');
+        container.style.display='none';
+        setTimeout(siguiente,300);
+      });
+    },100);
+  }
+  siguiente();
+}
+</script>
+</body>
+</html>
